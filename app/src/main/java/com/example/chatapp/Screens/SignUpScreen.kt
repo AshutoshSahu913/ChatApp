@@ -30,10 +30,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,7 +44,6 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,18 +63,22 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
 
     CheckSignedIn(viewModel = vm, navController = navController)
 
-    var userName by remember {
-        mutableStateOf(TextFieldValue())
+    val userName = remember {
+        mutableStateOf("")
     }
-    var password by remember {
-        mutableStateOf(TextFieldValue())
+    val password = remember {
+        mutableStateOf("")
     }
 
-    var phoneNumber by remember {
-        mutableStateOf(TextFieldValue())
+    val phoneNumber = remember {
+        mutableStateOf("")
     }
-    var email by remember {
-        mutableStateOf(TextFieldValue())
+    val email = remember {
+        mutableStateOf("")
+    }
+
+    val buttonText = remember {
+        mutableStateOf("Register")
     }
     val focus = LocalFocusManager.current
 
@@ -114,7 +115,7 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
 
 
                 OutlinedTextField(
-                    value = userName, onValueChange = { userName = it },
+                    value = userName.value, onValueChange = { userName.value = it },
                     label = {
                         Text(
                             text = "Username",
@@ -148,8 +149,8 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
                 )
                 Spacer(modifier = Modifier.size(10.dp))
                 OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
+                    value = email.value,
+                    onValueChange = { email.value = it },
                     label = {
                         Text(
                             text = "Email",
@@ -187,8 +188,8 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
                 )
                 Spacer(modifier = Modifier.size(10.dp))
                 OutlinedTextField(
-                    value = phoneNumber,
-                    onValueChange = { phoneNumber = it },
+                    value = phoneNumber.value,
+                    onValueChange = { phoneNumber.value = it },
                     label = {
                         Text(
                             text = "Phone number",
@@ -222,13 +223,13 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
 //                visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
                     textStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold),
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone)
                 )
 
                 Spacer(modifier = Modifier.size(10.dp))
                 OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
+                    value = password.value,
+                    onValueChange = { password.value = it },
                     label = {
                         Text(
                             text = "Password",
@@ -269,15 +270,18 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
 
             Button(
                 onClick = {
-                    if (userName.text.isNotEmpty() && password.text.isNotEmpty() && email.text.isNotEmpty() && phoneNumber.text.isNotEmpty()) {
+                    if (userName.value.isNotEmpty() && password.value.isNotEmpty() && email.value.isNotEmpty() && phoneNumber.value.isNotEmpty()) {
+                        buttonText.value = ""
                         vm.signUp(
-                            name = userName.text,
-                            email = email.text,
-                            phoneNumber = phoneNumber.text,
-                            password = password.text
+                            name = userName.value,
+                            email = email.value,
+                            phoneNumber = phoneNumber.value,
+                            password = password.value
                         )
                     } else {
+                        buttonText.value = "Register"
                         Toast.makeText(context, "Fill all fields", Toast.LENGTH_SHORT).show()
+
                     }
 
                 },
@@ -290,12 +294,18 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
                 ),
                 modifier = Modifier.padding(top = 10.dp), shape = RoundedCornerShape(10.dp)
             ) {
-                Text(
-                    text = "Register",
-                    fontSize = 20.sp,
-                    fontStyle = FontStyle.Normal,
-                    fontWeight = FontWeight.Black
-                )
+
+                if (vm.inProgress.value) {
+                    CommonProgressBar()
+                } else {
+                    Text(
+                        text = buttonText.value,
+                        fontSize = 20.sp,
+                        fontStyle = FontStyle.Normal,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+
             }
 
             Spacer(modifier = Modifier.size(10.dp))
@@ -323,9 +333,5 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
 
             }
         }
-    }
-
-    if (vm.inProgress.value) {
-        CommonProgressBar()
     }
 }

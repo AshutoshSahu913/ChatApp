@@ -1,7 +1,9 @@
 package com.example.chatapp
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import com.example.chatapp.Data.Event
 import com.example.chatapp.Data.USER_NODE
@@ -23,7 +25,6 @@ class LiveChatViewModel @Inject constructor(
     var signIn = mutableStateOf(false)
     var userData = mutableStateOf<UserData?>(null)
 
-
     init {
         val currentUser = auth.currentUser
         signIn.value = currentUser != null
@@ -34,28 +35,44 @@ class LiveChatViewModel @Inject constructor(
 
     fun signUp(name: String, email: String, phoneNumber: String, password: String) {
         inProgress.value = true
-        if (name.isEmpty() or phoneNumber.isEmpty() or password.isEmpty() or email.isEmpty()) {
-            handleException(customMessage = "Please Fill All Fields")
+
+        // Validate input fields
+        if (name.isBlank() || email.isBlank() || phoneNumber.isBlank() || password.isBlank()) {
+            handleException(customMessage = "Please fill all fields")
             return
         }
-        inProgress.value = true
-        db.collection(USER_NODE).whereEqualTo("number", phoneNumber).get().addOnSuccessListener {
-            if (it.isEmpty) {
-                auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { a ->
-                    if (a.isSuccessful) {
-                        signIn.value = true
-                        Log.d("DONE", "signUp: Successful  $email")
-                        createAndUpdateProfile(name, phoneNumber)
-                    } else {
-                        Log.d("DONE", "signUp: failed  $email")
-                        handleException(a.exception, "sign up false")
-                    }
+
+        // Check if the phone number is already registered
+        db.collection(USER_NODE)
+            .whereEqualTo("number", phoneNumber)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (querySnapshot.isEmpty) {
+                    // Phone number is not registered, proceed with sign-up
+                    auth.createUserWithEmailAndPassword(email, password)
+                        .addOnCompleteListener { signUpTask ->
+                            if (signUpTask.isSuccessful) {
+                                // Sign-up successful
+                                signIn.value = true
+                                Log.d("SignUp", "Sign-up successful: $email")
+                                createAndUpdateProfile(name, phoneNumber)
+                            } else {
+                                // Sign-up failed
+                                Log.e("SignUp", "Sign-up failed: $email", signUpTask.exception)
+                                handleException(signUpTask.exception, "Sign-up failed")
+                            }
+                        }
+                } else {
+                    // Phone number already exists
+                    handleException(customMessage = "Phone number already exists")
+                    inProgress.value = false
                 }
-            } else {
-                handleException(customMessage = "Number already exists")
-                inProgress.value = false
             }
-        }
+            .addOnFailureListener { exception ->
+                // Error fetching data
+                Log.e("SignUp", "Error fetching data", exception)
+                handleException(exception, "Error fetching data")
+            }
     }
 
     private fun createAndUpdateProfile(
@@ -74,7 +91,8 @@ class LiveChatViewModel @Inject constructor(
             )
 
         uid?.let {
-            inProgress.value = true
+            inProgress.value =
+                true
             db.collection(USER_NODE).document(uid).get().addOnSuccessListener {
                 if (it.exists()) {
                     //if data is exists so update the data
@@ -104,7 +122,6 @@ class LiveChatViewModel @Inject constructor(
                 inProgress.value = false
             }
         }
-
     }
 
     fun handleException(exception: Exception? = null, customMessage: String = "") {

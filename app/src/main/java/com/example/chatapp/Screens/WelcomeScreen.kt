@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.chatapp.CheckSignedIn
 import com.example.chatapp.DestinationScreen
 import com.example.chatapp.LiveChatViewModel
 import com.example.chatapp.R
@@ -37,6 +38,7 @@ import com.example.chatapp.ui.theme.Color1
 
 @Composable
 fun WelcomeScreen(navController: NavHostController, vm: LiveChatViewModel) {
+    CheckSignedIn(viewModel = vm, navController = navController)
 
     Box() {
         Column(
