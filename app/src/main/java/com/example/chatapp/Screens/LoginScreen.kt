@@ -13,10 +13,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -27,10 +29,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,10 +41,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.chatapp.CheckSignedIn
+import com.example.chatapp.CommonProgressBar
 import com.example.chatapp.DestinationScreen
 import com.example.chatapp.LiveChatViewModel
 import com.example.chatapp.R
@@ -54,10 +55,12 @@ import com.example.chatapp.ui.theme.Color1
 
 @Composable
 fun LoginScreen(navController: NavController, vm: LiveChatViewModel) {
-    var phoneNumber by remember {
+    CheckSignedIn(viewModel = vm, navController = navController)
+
+    val email = remember {
         mutableStateOf("")
     }
-    var otp by remember {
+    val password = remember {
         mutableStateOf("")
     }
     val context = LocalContext.current.applicationContext
@@ -66,13 +69,16 @@ fun LoginScreen(navController: NavController, vm: LiveChatViewModel) {
             .fillMaxHeight()
             .background(
                 Color.White
+            )
+            .verticalScroll(
+                rememberScrollState()
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
 
         ) {
 
         Image(
-            painter = painterResource(id = R.drawable.enter_otp_pana),
+            painter = painterResource(id = R.drawable.computer_login_pana),
             contentDescription = "",
             modifier = Modifier
                 .fillMaxWidth()
@@ -91,13 +97,12 @@ fun LoginScreen(navController: NavController, vm: LiveChatViewModel) {
             colors = CardDefaults.cardColors(Color.White)
         ) {
 
-
             OutlinedTextField(
-                value = phoneNumber,
-                onValueChange = { /*if (it.length <= maxChar)*/ phoneNumber = it },
+                value = email.value,
+                onValueChange = { email.value = it },
                 label = {
                     Text(
-                        text = "Phone number",
+                        text = "Email",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -118,24 +123,24 @@ fun LoginScreen(navController: NavController, vm: LiveChatViewModel) {
 
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Call,
+                        imageVector = Icons.Default.Email,
                         contentDescription = "call icon",
                     )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, top = 10.dp,end=20.dp,bottom=10.dp),
+                    .padding(start = 20.dp, top = 10.dp, end = 20.dp, bottom = 10.dp),
 //                visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
                 textStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold),
-//            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
             )
 
             Spacer(modifier = Modifier.size(10.dp))
             OutlinedTextField(
-                value = otp,
-                onValueChange = { otp = it },
-                label = { Text(text = "OTP", fontSize = 14.sp, fontWeight = FontWeight.Bold) },
+                value = password.value,
+                onValueChange = { password.value = it },
+                label = { Text(text = "Password", fontSize = 14.sp, fontWeight = FontWeight.Bold) },
                 shape = RoundedCornerShape(10.dp),
                 colors = TextFieldDefaults.colors(
                     focusedLeadingIconColor = AppColor,
@@ -156,27 +161,31 @@ fun LoginScreen(navController: NavController, vm: LiveChatViewModel) {
                         contentDescription = "password icon"
                     )
                 },
+                trailingIcon = {
+                    Icon(imageVector = Icons.Default.Lock, contentDescription = "Eyes")
+
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, top = 10.dp,end=20.dp,bottom=30.dp),
+                    .padding(start = 20.dp, top = 10.dp, end = 20.dp, bottom = 30.dp),
 //            visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
                 textStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold),
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
             )
         }
         Spacer(modifier = Modifier.size(10.dp))
 
         Button(
             onClick = {
-                if (phoneNumber.isNotEmpty() && otp.isNotEmpty()) {
-                    navigateTo(navController, DestinationScreen.ChatList.route)
-                    Toast.makeText(context, "Login Successfully", Toast.LENGTH_SHORT)
-                        .show()
+                if (email.value.isNotEmpty() && password.value.isNotEmpty()) {
+                    vm.loginIn(email = email.value, password = password.value)
+//                    navigateTo(navController, DestinationScreen.ChatList.route)
+//                    Toast.makeText(context, "Login Successfully", Toast.LENGTH_SHORT)
+//                        .show()
                 } else {
-                    Toast.makeText(context, "Enter Phone Number", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Enter Email and password", Toast.LENGTH_SHORT).show()
                 }
-
             },
             colors = ButtonDefaults.buttonColors(Color1),
             contentPadding = PaddingValues(
@@ -187,12 +196,22 @@ fun LoginScreen(navController: NavController, vm: LiveChatViewModel) {
             ),
             modifier = Modifier.padding(top = 10.dp), shape = RoundedCornerShape(10.dp)
         ) {
-            Text(
-                text = "Login",
-                fontSize = 20.sp,
-                fontStyle = FontStyle.Normal,
-                fontWeight = FontWeight.Black
-            )
+            if (vm.inProgress.value) {
+                Text(
+                    text = "",
+                    fontSize = 20.sp,
+                    fontStyle = FontStyle.Normal,
+                    fontWeight = FontWeight.Black
+                )
+                CommonProgressBar()
+            } else {
+                Text(
+                    text = "Login",
+                    fontSize = 20.sp,
+                    fontStyle = FontStyle.Normal,
+                    fontWeight = FontWeight.Black
+                )
+            }
         }
 
         Spacer(modifier = Modifier.size(10.dp))

@@ -1,9 +1,7 @@
 package com.example.chatapp
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import com.example.chatapp.Data.Event
 import com.example.chatapp.Data.USER_NODE
@@ -80,7 +78,6 @@ class LiveChatViewModel @Inject constructor(
         phoneNumber: String? = null,
         imageUrl: String? = null
     ) {
-
         val uid = auth.uid
         val userData =
             UserData(
@@ -106,8 +103,6 @@ class LiveChatViewModel @Inject constructor(
                     handleException(it, "Can't Retrieve Data")
                 }
         }
-
-
     }
 
     private fun getUserData(uid: String) {
@@ -120,6 +115,26 @@ class LiveChatViewModel @Inject constructor(
                 val user = value.toObject<UserData>()
                 userData.value = user
                 inProgress.value = false
+            }
+        }
+    }
+
+    fun loginIn(email: String, password: String) {
+        if (email.isEmpty() or password.isEmpty()) {
+            handleException(customMessage = "Please fill the all fields")
+            return
+        } else {
+            inProgress.value = true
+            auth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
+                if (it.isSuccessful) {
+                    signIn.value = true
+                    inProgress.value = false
+                    auth.currentUser?.uid?.let {
+                        getUserData(it)
+                    }
+                } else {
+                    handleException(exception = it.exception, customMessage = "Login Failed")
+                }
             }
         }
     }

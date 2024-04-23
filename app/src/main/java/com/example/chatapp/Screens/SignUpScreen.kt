@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Email
@@ -89,6 +91,9 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
                 .fillMaxHeight()
                 .background(
                     Color.White
+                )
+                .verticalScroll(
+                    rememberScrollState()
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
 
@@ -271,7 +276,7 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
             Button(
                 onClick = {
                     if (userName.value.isNotEmpty() && password.value.isNotEmpty() && email.value.isNotEmpty() && phoneNumber.value.isNotEmpty()) {
-                        buttonText.value = ""
+//                        buttonText.value = ""
                         vm.signUp(
                             name = userName.value,
                             email = email.value,
@@ -279,7 +284,7 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
                             password = password.value
                         )
                     } else {
-                        buttonText.value = "Register"
+//                        buttonText.value = "Register"
                         Toast.makeText(context, "Fill all fields", Toast.LENGTH_SHORT).show()
 
                     }
@@ -294,7 +299,6 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
                 ),
                 modifier = Modifier.padding(top = 10.dp), shape = RoundedCornerShape(10.dp)
             ) {
-
                 if (vm.inProgress.value) {
                     CommonProgressBar()
                 } else {
