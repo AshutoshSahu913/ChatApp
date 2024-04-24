@@ -87,4 +87,5 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
+    implementation ("androidx.compose.material:material-icons-extended:1.6.4")
 }
