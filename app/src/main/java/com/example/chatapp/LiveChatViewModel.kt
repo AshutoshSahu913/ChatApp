@@ -83,7 +83,7 @@ class LiveChatViewModel @Inject constructor(
         }
     }
 
-    private fun createAndUpdateProfile(
+    fun createAndUpdateProfile(
         name: String? = null,
         phoneNumber: String? = null,
         imageUrl: String? = null
@@ -187,5 +187,12 @@ class LiveChatViewModel @Inject constructor(
                 handleException(exception = it)
                 inProgress.value = false
             }
+    }
+
+    fun logout() {
+        auth.signOut()
+        signIn.value=false
+        userData.value=null
+        eventMutableState.value=Event("Logout")
     }
 }

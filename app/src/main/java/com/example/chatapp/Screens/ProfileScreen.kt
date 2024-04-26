@@ -56,8 +56,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.chatapp.CommonImg
 import com.example.chatapp.CommonProgressBar
+import com.example.chatapp.DestinationScreen
 import com.example.chatapp.LiveChatViewModel
 import com.example.chatapp.R
+import com.example.chatapp.navigateTo
 import com.example.chatapp.ui.theme.AppColor
 import com.example.chatapp.ui.theme.Color1
 
@@ -86,12 +88,22 @@ fun ProfileScreen(navController: NavHostController, vm: LiveChatViewModel) {
         name = name,
         number = num,
 //        email = "",
-        onNameChange = { "" },
-        onNumberChange = { "" },
-        onEmailChange = {},
-        onBack = {},
-        onSave = {},
-        logout = {}
+        onNameChange = { name = it },
+        onNumberChange = { num = it },
+//        onEmailChange = {},
+        onBack = {
+            navigateTo(navController = navController, route = DestinationScreen.ChatList.route)
+        },
+        onSave = {
+            vm.createAndUpdateProfile(
+                name = name,
+                phoneNumber = num
+            )
+        },
+        logout = {
+            vm.logout()
+            navigateTo(navController = navController, route = DestinationScreen.Login.route)
+        }
     )
     BottomNavigationMenu(
         selectedItem = BottomNavigationItem.PROFILE_LIST,
@@ -109,7 +121,7 @@ fun ProfileContent(
 //    email: String,
     onNameChange: (String) -> Unit,
     onNumberChange: (String) -> Unit,
-    onEmailChange: (String) -> Unit,
+//    onEmailChange: (String) -> Unit,
     onBack: () -> Unit, onSave: () -> Unit,
     logout: () -> Unit
 ) {
@@ -263,50 +275,6 @@ fun ProfileContent(
                 textStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold),
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone)
             )
-
-//            Spacer(modifier = Modifier.size(10.dp))
-            /*
-                        OutlinedTextField(
-                            value = email,
-                            onValueChange = onEmailChange,
-                            label = {
-                                Text(
-                                    text = "Email",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-
-                            },
-                            shape = RoundedCornerShape(10.dp),
-                            colors = TextFieldDefaults.colors(
-                                focusedLeadingIconColor = AppColor,
-                                unfocusedLeadingIconColor = Color1,
-                                focusedLabelColor = AppColor,
-                                unfocusedLabelColor = Color.Black,
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White,
-                                focusedIndicatorColor = AppColor,
-                                unfocusedIndicatorColor = Color.LightGray,
-                                unfocusedPlaceholderColor = AppColor,
-                                errorTextColor = Color.Red
-                            ),
-
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Email,
-                                    contentDescription = "email icon"
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 20.dp),
-            //                visualTransformation = PasswordVisualTransformation(),
-                            singleLine = true,
-                            textStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold),
-                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
-                        )
-            */
-
             Spacer(modifier = Modifier.size(20.dp))
             Button(
                 onClick = {
@@ -327,6 +295,9 @@ fun ProfileContent(
                     fontStyle = FontStyle.Normal,
                     fontWeight = FontWeight.Black
                 )
+                if (vm.inProgress.value) {
+                    CommonProgressBar()
+                }
             }
         }
     }
