@@ -3,17 +3,22 @@ package com.example.chatapp
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chatapp.Data.CHATS
+import com.example.chatapp.Data.ChatData
+import com.example.chatapp.Data.ChatUser
 import com.example.chatapp.Data.Event
 import com.example.chatapp.Data.USER_NODE
 import com.example.chatapp.Data.UserData
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
+import com.google.firebase.firestore.toObjects
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -26,9 +31,11 @@ class LiveChatViewModel @Inject constructor(
 ) : ViewModel() {
 
     var inProgress = mutableStateOf(false)
+    var inProgressChats = mutableStateOf(false)
     var eventMutableState = mutableStateOf<Event<String>?>(null)
     var signIn = mutableStateOf(false)
     var userData = mutableStateOf<UserData?>(null)
+    var chats = mutableStateOf<List<ChatData>>(listOf())
 
     init {
         val currentUser = auth.currentUser
@@ -127,6 +134,7 @@ class LiveChatViewModel @Inject constructor(
                 val user = value.toObject<UserData>()
                 userData.value = user
                 Log.d("IMG", "ProfileContent: $user")
+                populateChats()
                 inProgress.value = false
             }
         }
@@ -194,5 +202,83 @@ class LiveChatViewModel @Inject constructor(
         signIn.value=false
         userData.value=null
         eventMutableState.value=Event("Logout")
+    }
+
+    fun onAddChat(number: String) {
+        if (number.isEmpty() or !number.isDigitsOnly()) {
+            handleException(customMessage = "Number must be contain digit only")
+        } else {
+            //here check the number is already available
+            db.collection(CHATS).where(
+                Filter.or(
+                    Filter.and(
+                        Filter.equalTo("user1.number", userData.value?.userNumber),
+                        Filter.equalTo("user2.number",number),
+                    ),
+                    Filter.and(
+                        Filter.equalTo("user1.number",number ),
+                        Filter.equalTo("user2.number", userData.value?.userNumber)
+                    )
+                )
+            ).get().addOnSuccessListener {
+                //agar empty h toh user available nai h
+                if (it.isEmpty) {
+                    db.collection(USER_NODE).whereEqualTo("userNumber", number).get()
+                        .addOnSuccessListener {
+                            if (it.isEmpty) {
+                                //ye bala number humare app ke database m available ni h
+                                handleException(customMessage = "Number is Not Found from database")
+                            } else {
+                                val chatPartner = it.toObjects<UserData>()[0]
+                                val id = db.collection(CHATS).document().id
+                                val chat = ChatData(
+                                    chatId = id,
+                                    ChatUser(
+                                        userData.value?.userId,
+                                        userData.value?.userName,
+                                        userData.value?.userNumber,
+                                        userData.value?.userImageUrl
+                                    ),
+                                    ChatUser(
+                                        chatPartner.userId,
+                                        chatPartner.userName,
+                                        chatPartner.userNumber,
+                                        chatPartner.userImageUrl,
+                                    )
+                                )
+                                db.collection(CHATS).document(id).set(chat)
+                            }
+                        }.addOnFailureListener {
+                            handleException(exception = it)
+                        }
+
+                }
+            }
+        }
+
+    }
+
+    fun populateChats() {
+        inProgressChats.value = true
+        db.collection(CHATS).where(
+            Filter.or(
+                Filter.equalTo("user1.userId", userData.value?.userId),
+                Filter.equalTo("user2.userId", userData.value?.userId)
+            )
+
+
+        ).addSnapshotListener { value, error ->
+            if (error != null) {
+                handleException(exception = error)
+            }
+            if (value != null) {
+                chats.value = value.documents.mapNotNull {
+                    Log.d("DATA", "populateChats: ${it.data}")
+                    it.toObject<ChatData>()
+                }
+                inProgressChats.value = false
+            }
+
+        }
     }
 }

@@ -191,10 +191,13 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
                     textStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold),
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
                 )
+                val maxNum = 10
                 Spacer(modifier = Modifier.size(10.dp))
                 OutlinedTextField(
                     value = phoneNumber.value,
-                    onValueChange = { phoneNumber.value = it },
+                    onValueChange = {
+                        if (phoneNumber.value.length <= maxNum) phoneNumber.value = it
+                    },
                     label = {
                         Text(
                             text = "Phone number",
