@@ -10,16 +10,20 @@ import com.example.chatapp.Data.CHATS
 import com.example.chatapp.Data.ChatData
 import com.example.chatapp.Data.ChatUser
 import com.example.chatapp.Data.Event
+import com.example.chatapp.Data.MESSAGES
+import com.example.chatapp.Data.Message
 import com.example.chatapp.Data.USER_NODE
 import com.example.chatapp.Data.UserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.toObject
 import com.google.firebase.firestore.toObjects
 import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import java.util.UUID
 import javax.inject.Inject
 
@@ -36,6 +40,11 @@ class LiveChatViewModel @Inject constructor(
     var signIn = mutableStateOf(false)
     var userData = mutableStateOf<UserData?>(null)
     var chats = mutableStateOf<List<ChatData>>(listOf())
+    val chatMessages = mutableStateOf<List<Message>>(listOf())
+    val inProgressChatMessage = mutableStateOf(false)
+    var currentChatMessageListener: ListenerRegistration? = null
+
+
 
     init {
         val currentUser = auth.currentUser
@@ -43,6 +52,43 @@ class LiveChatViewModel @Inject constructor(
         currentUser?.uid?.let {
             getUserData(it)
         }
+    }
+
+
+    fun populateMessages(chatId: String) {
+        inProgressChatMessage.value = true
+        currentChatMessageListener = db.collection(CHATS).document(chatId).collection(MESSAGES)
+            .addSnapshotListener { value, error ->
+                if (error != null) {
+                    handleException(exception = error)
+                }
+                if (value != null) {
+                    chatMessages.value = value.documents.mapNotNull {
+                        it.toObject<Message>()
+                    }.sortedBy { it.timeStamp }
+                    inProgressChatMessage.value = false
+                }
+            }
+    }
+
+
+    fun depopulateMessages() {
+        chatMessages.value = listOf()
+        currentChatMessageListener = null
+    }
+
+    //send message to firebase
+    fun onSendReply(chatID: String, message: String) {
+        val time = Calendar.getInstance().time.toString()
+        val msg = Message(sendBy = userData.value?.userId, message = message, timeStamp = time)
+        db.collection(CHATS).document(chatID).collection(MESSAGES).document().set(msg)
+            .addOnCompleteListener {
+                if (it.isSuccessful) {
+
+                } else {
+                    handleException(customMessage = "Error Found : Message Not Send to Firebase")
+                }
+            }
     }
 
     fun signUp(name: String, email: String, phoneNumber: String, password: String) {
@@ -201,7 +247,9 @@ class LiveChatViewModel @Inject constructor(
         auth.signOut()
         signIn.value=false
         userData.value=null
-        eventMutableState.value=Event("Logout")
+        eventMutableState.value = Event("Logout")
+        depopulateMessages()
+        currentChatMessageListener = null
     }
 
     fun onAddChat(number: String) {

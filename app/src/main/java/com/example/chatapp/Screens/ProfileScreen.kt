@@ -28,7 +28,7 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -295,9 +295,9 @@ fun ProfileContent(
                     fontStyle = FontStyle.Normal,
                     fontWeight = FontWeight.Black
                 )
-                if (vm.inProgress.value) {
-                    CommonProgressBar()
-                }
+//                if (vm.inProgress.value) {
+//                    CommonProgressBar()
+//                }
             }
         }
     }
@@ -314,7 +314,8 @@ fun ProfileImage(imageUrl: String?, vm: LiveChatViewModel) {
             }
         }
     if (!imageUrl.isNullOrEmpty()) {
-        Card(
+
+        ElevatedCard(
             shape = CircleShape,
             modifier = Modifier
                 .padding(8.dp)
@@ -322,18 +323,17 @@ fun ProfileImage(imageUrl: String?, vm: LiveChatViewModel) {
                 .clickable {
                     // Handle click event, if needed
                     launcher.launch("image/*")
-                }
-        ) {
-            // Display image using CommonImg composable
+                }) {
             CommonImg(
                 data = imageUrl,
                 modifier = Modifier
                     .size(100.dp)
                     .padding(5.dp)
                     .fillMaxWidth(),
-                contentScale = ContentScale.Crop,
+
             )
         }
+
     } else {
         // Handle case when imageUrl is null or empty
         Image(

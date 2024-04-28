@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -60,7 +61,6 @@ fun ChatListScreen(navController: NavController, vm: LiveChatViewModel) {
         val showDialog = remember {
             mutableStateOf(false)
         }
-
         val onFabClick: () -> Unit = { showDialog.value = true }
         val onDismiss: () -> Unit = { showDialog.value = false }
         val onAddChat: (String) -> Unit = {
@@ -73,7 +73,7 @@ fun ChatListScreen(navController: NavController, vm: LiveChatViewModel) {
                 TopBar()
             },
             floatingActionButton = {
-                FAB(
+                TOP_BAR(
                     showDialog = showDialog.value,
                     onFabClick = onFabClick,
                     onDismiss = onDismiss,
@@ -111,9 +111,7 @@ fun ChatListScreen(navController: NavController, vm: LiveChatViewModel) {
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = FontFamily(Font(R.font.montserrat_regular)),
                             )
-
                         }
-
                     }
                 } else {
                     Row(modifier = Modifier.padding(top = 56.dp)) {
@@ -184,7 +182,7 @@ fun TopBar() {
 
 
 @Composable
-fun FAB(
+fun TOP_BAR(
     showDialog: Boolean,
     onFabClick: () -> Unit,
     onDismiss: () -> Unit,
@@ -233,21 +231,28 @@ fun FAB(
             OutlinedTextField(
                 value = addChatNumber.value,
                 onValueChange = {
-                    if (addChatNumber.value.length <= MinNum) addChatNumber.value = it
+                    if (addChatNumber.value.length < MinNum) addChatNumber.value = it
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 colors = TextFieldDefaults.colors(
+                    unfocusedLeadingIconColor = Color1,
+                    focusedLabelColor = AppColor,
+                    unfocusedLabelColor = Color.Black,
                     focusedContainerColor = Color.White,
-                    disabledContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
-                    focusedLabelColor = Color.White
-                )
+                    focusedIndicatorColor = AppColor,
+                    unfocusedIndicatorColor = Color.LightGray,
+                    unfocusedPlaceholderColor = AppColor,
+                    errorTextColor = Color.Red
+
+                ),
+                label = { Text(text = "Number", fontSize = 14.sp, fontWeight = FontWeight.Bold) },
             )
         }, icon = {
             Image(
                 painterResource(id = R.drawable.group_chat_pana),
                 contentDescription = "",
-                modifier = Modifier.size(200.dp)
+                modifier = Modifier.width(300.dp)
             )
         }, containerColor = Color.White
         )
