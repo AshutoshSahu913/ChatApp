@@ -1,7 +1,6 @@
 package com.example.chatapp.Screens
 
-import android.content.Intent
-import android.net.Uri
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -89,17 +88,16 @@ fun SingleChatScreen(navController: NavHostController, vm: LiveChatViewModel, ch
     val onFabClick: () -> Unit = { showDialog.value = true }
     val onDismiss: () -> Unit = { showDialog.value = false }
 
+    val context = LocalContext.current.applicationContext
+
     LaunchedEffect(key1 = Unit) {
         vm.populateMessages(chatId)
     }
 
     BackHandler {
         vm.depopulateMessages()
-
     }
-
     val chatMessages = vm.chatMessages
-
     Scaffold(
         topBar = {
             TOP_BAR(
@@ -116,7 +114,7 @@ fun SingleChatScreen(navController: NavHostController, vm: LiveChatViewModel, ch
                 },
                 onFabClick = onFabClick,
                 onDismiss = onDismiss,
-                showDialog = showDialog.value,
+                showDialog = showDialog.value, context = context
             )
 //            TopBar(
 //            )
@@ -249,8 +247,7 @@ fun TOP_BAR(
     imageUrl: String,
     showDialog: Boolean,
     onDismiss: () -> Unit,
-    onFabClick: () -> Unit,
-    onBack: () -> Unit
+    onFabClick: () -> Unit, onBack: () -> Unit, context: Context
 ) {
     Row(
         modifier = Modifier
@@ -298,6 +295,17 @@ fun TOP_BAR(
             modifier = Modifier
                 .padding(horizontal = 10.dp)
                 .weight(1f)
+        )
+
+        Icon(
+            imageVector = Icons.Default.Call,
+            contentDescription = "",
+            modifier = Modifier
+                .padding(end = 10.dp)
+                .wrapContentSize(Alignment.Center)
+                .background(Color.Transparent),
+            tint = Color.White
+
         )
     }
 
@@ -353,14 +361,6 @@ fun TOP_BAR(
                             contentDescription = "",
                             modifier = Modifier.padding(end = 10.dp), tint = AppColor
                         )
-//                        Text(
-//                            text = "Name : ",
-//                            fontSize = 15.sp,
-//                            fontStyle = FontStyle.Normal,
-//                            fontWeight = FontWeight.Black,
-//                            fontFamily = FontFamily(Font(R.font.montserrat_regular))
-//                        )
-
                         Text(
                             text = name,
                             fontSize = 15.sp,
@@ -372,19 +372,16 @@ fun TOP_BAR(
 
                     Spacer(modifier = Modifier.size(10.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-
                         Icon(
                             imageVector = Icons.Default.Call,
                             contentDescription = "",
-                            modifier = Modifier.padding(end = 10.dp), tint = AppColor
+                            modifier = Modifier
+                                .padding(end = 10.dp)
+                                .clickable {
+
+                                },
+                            tint = AppColor
                         )
-//                        Text(
-//                            text = "Number: ",
-//                            fontSize = 15.sp,
-//                            fontStyle = FontStyle.Normal,
-//                            fontWeight = FontWeight.Black,
-//                            fontFamily = FontFamily(Font(R.font.montserrat_regular))
-//                        )
                         Text(
                             text = number,
                             fontSize = 13.sp,

@@ -12,6 +12,8 @@ import com.example.chatapp.Data.ChatUser
 import com.example.chatapp.Data.Event
 import com.example.chatapp.Data.MESSAGES
 import com.example.chatapp.Data.Message
+import com.example.chatapp.Data.STATUS
+import com.example.chatapp.Data.Status
 import com.example.chatapp.Data.USER_NODE
 import com.example.chatapp.Data.UserData
 import com.google.firebase.auth.FirebaseAuth
@@ -44,7 +46,8 @@ class LiveChatViewModel @Inject constructor(
     val inProgressChatMessage = mutableStateOf(false)
     var currentChatMessageListener: ListenerRegistration? = null
 
-
+    var status = mutableStateOf<List<Status>>(listOf())
+    val inProgressStatus = mutableStateOf(false)
 
     init {
         val currentUser = auth.currentUser
@@ -70,7 +73,6 @@ class LiveChatViewModel @Inject constructor(
                 }
             }
     }
-
 
     fun depopulateMessages() {
         chatMessages.value = listOf()
@@ -179,9 +181,10 @@ class LiveChatViewModel @Inject constructor(
             if (value != null) {
                 val user = value.toObject<UserData>()
                 userData.value = user
-                Log.d("IMG", "ProfileContent: $user")
-                populateChats()
                 inProgress.value = false
+                populateChats()
+                populateStatuses()
+                Log.d("IMG", "ProfileContent: $user")
             }
         }
     }
@@ -235,6 +238,7 @@ class LiveChatViewModel @Inject constructor(
             val result = it.metadata?.reference?.downloadUrl
             inProgress.value = false
             Log.d("RESULT", "uploadImg: $result")
+            Log.d("STATUS", "upload Img server-------------------------------------------------------------------------------- ")
             result?.addOnSuccessListener(onSuccess)
         }
             .addOnFailureListener {
@@ -327,6 +331,80 @@ class LiveChatViewModel @Inject constructor(
                 inProgressChats.value = false
             }
 
+        }
+    }
+
+    fun uploadStatus(uri: Uri) {
+        uploadImg(uri = uri) {
+            createStatus(it.toString())
+            Log.d("STATUS", "uploadStatus-------------------------------------------------------------------------------- ")
+        }
+    }
+
+    fun createStatus(imageUrl: String) {
+        Log.d("STATUS", "creating -------------------------------------------------------------------------------- ")
+        val newStatus = Status(
+            ChatUser(
+                userId = userData.value?.userId,
+                name = userData.value?.userName,
+                number = userData.value?.userNumber,
+                imageUrl = userData.value?.userImageUrl,
+            ),
+            imageUrl = imageUrl,
+            timeStamp = System.currentTimeMillis()
+        )
+        db.collection(STATUS).document().set(newStatus)
+        Log.d(
+            "STATUS",
+            "create Node-------------------------------------------------------------------------------- "
+        )
+    }
+
+    fun populateStatuses() {
+        Log.d("STATUS", "get Status-------------------------------------------------------------------------------- ")
+        val timeDelta = 24L * 60 * 60 * 1000
+        val currentTime = System.currentTimeMillis()
+        val cutOff = currentTime - timeDelta
+        inProgressStatus.value = true
+        db.collection(CHATS).where(
+            Filter.or(
+                Filter.equalTo("user1.userId", userData.value?.userId),
+                Filter.equalTo("user2.userId", userData.value?.userId),
+            )
+        ).addSnapshotListener { value, error ->
+            if (error != null) {
+                handleException(exception = error)
+            }
+            if (value != null) {
+                //jinse m chat m connect hoon unke data ko store karne ke liye
+                val currentConnections = arrayListOf(userData.value?.userId)
+                val chats = value.toObjects<ChatData>()
+                chats.forEach { chat ->
+                    //ye mere status h isko ni lana h
+                    if (chat.user1.userId == userData.value?.userId) {
+                        currentConnections.add(chat.user2.userId)
+//                        inProgressStatus.value=false
+                    } else {
+                        currentConnections.add(chat.user1.userId)
+//                        inProgressStatus.value = false
+                    }
+                }
+
+                //jinke sath baatcheet karta hoon unke status lana h
+                db.collection(STATUS).whereGreaterThan("timeStamp", cutOff)
+                    .whereIn("user.userId", currentConnections)
+                    .addSnapshotListener { value1, error1 ->
+                        if (error1 != null) {
+                            handleException(exception = error1)
+                            inProgressStatus.value = false
+                        }
+                        if (value1 != null) {
+                            status.value= value1.toObjects()
+                            Log.d("STATUS", "set Status in value-------------------------------------------------------------------------------- ")
+                            inProgressStatus.value = false
+                        }
+                    }
+            }
         }
     }
 }

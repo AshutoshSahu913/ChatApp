@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -27,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,7 +45,8 @@ fun navigateTo(navController: NavController, route: String) {
 fun CommonProgressBar() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier.background(Color.Transparent)
     ) {
         CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, trackColor = AppColor)
     }
@@ -89,15 +90,17 @@ fun CommonImg(
 fun CommonRow(
     imageUrl: String?,
     name: String?,
-    onItemClick: () -> Unit,
-    onImgClick: () -> Unit?
+    onItemClick: () -> Unit?,
+    onImgClick: () -> Unit?,
+//    time: Long?
 ) {
     ElevatedCard(
-        elevation = CardDefaults.cardElevation(1.dp),
-        modifier = Modifier.padding(2.dp),
+        elevation = CardDefaults.cardElevation(2.dp),
+        modifier = Modifier
+            .padding(5.dp),
         colors = CardDefaults.cardColors(
             Color.White
-        ), shape = RoundedCornerShape(20.dp)
+        ), shape = RoundedCornerShape(10.dp)
     ) {
 
         Row(
@@ -109,21 +112,50 @@ fun CommonRow(
         ) {
             CommonImg(data = imageUrl, modifier = Modifier
                 .padding(8.dp)
+
                 .size(70.dp)
                 .clip(CircleShape)
                 .clickable {
                     onItemClick.invoke()
                 }
             )
+//            Column {
+
             Text(
                 text = name ?: "----", fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily(Font(R.font.montserrat_regular)),
                 color = Color.Black
             )
+//                Text(
+//                    text = time.toString(), fontSize = 10.sp,
+//                    fontWeight = FontWeight.Medium,
+//                    fontFamily = FontFamily(Font(R.font.montserrat_regular)),
+//                    color = Color.Black
+//                )
+//            }
+
+
+
         }
     }
 
-
 //    Divider(modifier = Modifier.height(1.dp), color = Color.Black)
+}
+
+@Composable
+fun TitleTxt(txt: String) {
+    Text(
+        color = Color.White,
+        text = txt,
+        fontSize = 25.sp,
+        fontFamily = FontFamily(
+            Font(R.font.montserrat_regular)
+        ),
+        fontStyle = FontStyle.Normal,
+        fontWeight = FontWeight.ExtraBold,
+        modifier = Modifier.padding(horizontal = 10.dp)
+
+    )
+
 }

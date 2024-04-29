@@ -17,6 +17,7 @@ import com.example.chatapp.Screens.LoginScreen
 import com.example.chatapp.Screens.ProfileScreen
 import com.example.chatapp.Screens.SignUpScreen
 import com.example.chatapp.Screens.SingleChatScreen
+import com.example.chatapp.Screens.SingleStatusScreen
 import com.example.chatapp.Screens.StatusScreen
 import com.example.chatapp.Screens.WelcomeScreen
 import com.example.chatapp.ui.theme.ChatAppTheme
@@ -101,6 +102,10 @@ class MainActivity : ComponentActivity() {
 
             composable(DestinationScreen.Profile.route) {
                 ProfileScreen(navController,vm)
+            }
+
+            composable(DestinationScreen.SingleStatus.route) {
+                SingleStatusScreen(navController, vm)
             }
         }
 

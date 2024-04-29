@@ -47,6 +47,7 @@ import com.example.chatapp.CommonRow
 import com.example.chatapp.DestinationScreen
 import com.example.chatapp.LiveChatViewModel
 import com.example.chatapp.R
+import com.example.chatapp.TitleTxt
 import com.example.chatapp.navigateTo
 import com.example.chatapp.ui.theme.AppColor
 import com.example.chatapp.ui.theme.Color1
@@ -155,7 +156,6 @@ fun ChatListScreen(navController: NavController, vm: LiveChatViewModel) {
 
 @Composable
 fun TopBar() {
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -163,19 +163,7 @@ fun TopBar() {
             .size(56.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            color = Color.White,
-            text = "Chat Screen",
-            fontSize = 25.sp,
-            fontFamily = FontFamily(
-                Font(R.font.montserrat_regular)
-            ),
-            fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.ExtraBold,
-            modifier = Modifier.padding(horizontal = 10.dp)
-
-        )
-
+        TitleTxt(txt = "Chat Screen")
     }
 
 }
