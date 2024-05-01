@@ -1,15 +1,19 @@
 package com.example.chatapp.Screens
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -57,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
 import com.example.chatapp.CommonImg
+import com.example.chatapp.CommonProgressBar
 import com.example.chatapp.Data.Message
 import com.example.chatapp.LiveChatViewModel
 import com.example.chatapp.R
@@ -67,7 +72,10 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun SingleChatScreen(navController: NavHostController, vm: LiveChatViewModel, chatId: String) {
+fun SingleChatScreen(
+    navController: NavHostController,
+    vm: LiveChatViewModel, chatId: String) {
+    val context = LocalContext.current
 
     var reply by rememberSaveable {
         mutableStateOf("")
@@ -76,7 +84,6 @@ fun SingleChatScreen(navController: NavHostController, vm: LiveChatViewModel, ch
         vm.onSendReply(chatID = chatId, message = reply)
         reply = ""
     }
-
     val myUser = vm.userData.value
     val currentChat = vm.chats.value.first { it.chatId == chatId }
     val chatUser =
@@ -88,8 +95,6 @@ fun SingleChatScreen(navController: NavHostController, vm: LiveChatViewModel, ch
     val onFabClick: () -> Unit = { showDialog.value = true }
     val onDismiss: () -> Unit = { showDialog.value = false }
 
-    val context = LocalContext.current.applicationContext
-
     LaunchedEffect(key1 = Unit) {
         vm.populateMessages(chatId)
     }
@@ -99,41 +104,47 @@ fun SingleChatScreen(navController: NavHostController, vm: LiveChatViewModel, ch
     }
     val chatMessages = vm.chatMessages
     Scaffold(
-        topBar = {
-            TOP_BAR(
-                name = chatUser.name ?: "",
-                imageUrl = chatUser.imageUrl ?: "",
-                number = chatUser.number ?: "",
-                onBack = {
+            topBar = {
+                TOP_BAR(
+                    name = chatUser.name ?: "",
+                    imageUrl = chatUser.imageUrl ?: "",
+                    number = chatUser.number ?: "",
+                    onBack = {
 //                    navigateTo(
 //                        navController = navController,
 //                        route = DestinationScreen.ChatList.route
 //                    )
-                    navController.popBackStack()
-                    vm.depopulateMessages()
-                },
-                onFabClick = onFabClick,
-                onDismiss = onDismiss,
-                showDialog = showDialog.value, context = context
-            )
+                        navController.popBackStack()
+                        vm.depopulateMessages()
+                    },
+                    onFabClick = onFabClick,
+                    onDismiss = onDismiss,
+                    showDialog = showDialog.value, context = context
+                )
 //            TopBar(
 //            )
-        },
-        bottomBar = {
-            ReplyBox(
-                reply = reply,
-                onReplyChange = { reply = it },
-                onSendReply = onSendReply
-            )
-        },
-        content = {
-            MessageBox(
-                modifier = Modifier.padding(it),
-                chatMessages = chatMessages.value,
-                currentUserId = myUser?.userId ?: ""
-            )
-        },
-    )
+            },
+            bottomBar = {
+                ReplyBox(
+                    reply = reply,
+                    onReplyChange = { reply = it },
+                    onSendReply = onSendReply
+                )
+            },
+            content = {
+                Box(modifier = Modifier.fillMaxSize()) {
+
+                    MessageBox(
+                        modifier = Modifier
+                            .padding(it)
+                            .fillMaxSize(),
+                        chatMessages = chatMessages.value,
+                        currentUserId = myUser?.userId ?: ""
+                    )
+                }
+            },
+        )
+
 }
 
 
@@ -303,7 +314,12 @@ fun TOP_BAR(
             modifier = Modifier
                 .padding(end = 10.dp)
                 .wrapContentSize(Alignment.Center)
-                .background(Color.Transparent),
+                .background(Color.Transparent)
+                .clickable {
+                    val intent = Intent(Intent.ACTION_DIAL)
+                    intent.data = Uri.parse("tel:$number")
+                    context.startActivity(intent)
+                },
             tint = Color.White
 
         )

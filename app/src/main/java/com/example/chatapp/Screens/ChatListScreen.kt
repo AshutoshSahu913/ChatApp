@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -54,6 +55,7 @@ import com.example.chatapp.ui.theme.Color1
 
 @Composable
 fun ChatListScreen(navController: NavController, vm: LiveChatViewModel) {
+    val context= LocalContext.current.applicationContext
     if (vm.inProgressChats.value) {
         CommonProgressBar()
     } else {
@@ -65,7 +67,7 @@ fun ChatListScreen(navController: NavController, vm: LiveChatViewModel) {
         val onFabClick: () -> Unit = { showDialog.value = true }
         val onDismiss: () -> Unit = { showDialog.value = false }
         val onAddChat: (String) -> Unit = {
-            vm.onAddChat(it)
+            vm.onAddChat(it, context = context)
             showDialog.value = false
         }
 
@@ -150,7 +152,7 @@ fun ChatListScreen(navController: NavController, vm: LiveChatViewModel) {
                     navController = navController
                 )
             }
-    )
+        )
     }
 }
 

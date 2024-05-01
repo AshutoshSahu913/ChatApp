@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ModeEdit
-import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -26,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -48,7 +48,16 @@ import com.example.chatapp.ui.theme.AppColor
 fun StatusScreen(navController: NavHostController, vm: LiveChatViewModel) {
     val context = LocalContext.current.applicationContext
     if (vm.inProgressStatus.value) {
-        CommonProgressBar()
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(2f)
+                .background(Color.White), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+
+            CommonProgressBar()
+        }
     } else {
         val statuses = vm.status.value
 //        Log.d(
@@ -154,8 +163,8 @@ fun StatusScreen(navController: NavHostController, vm: LiveChatViewModel) {
                                 fontSize = 18.sp,
                                 fontFamily = FontFamily(Font(R.font.montserrat_regular)),
                                 fontWeight = FontWeight.ExtraBold,
-                                modifier = Modifier.padding(vertical = 5.dp, horizontal = 5.dp)
-                                ,color= Color.Black
+                                modifier = Modifier.padding(vertical = 5.dp, horizontal = 5.dp),
+                                color = Color.Black
                             )
                             CommonRow(
                                 imageUrl = myStatuses[0].user.imageUrl,
@@ -168,6 +177,7 @@ fun StatusScreen(navController: NavHostController, vm: LiveChatViewModel) {
                                 }
                             ) {
 
+
                             }
 //                            Divider(modifier = Modifier.padding(vertical = 2.dp))
 
@@ -176,8 +186,8 @@ fun StatusScreen(navController: NavHostController, vm: LiveChatViewModel) {
                                 fontSize = 18.sp,
                                 fontFamily = FontFamily(Font(R.font.montserrat_regular)),
                                 fontWeight = FontWeight.ExtraBold,
-                                modifier = Modifier.padding(vertical = 5.dp, horizontal = 5.dp)
-                                ,color= Color.Black
+                                modifier = Modifier.padding(vertical = 5.dp, horizontal = 5.dp),
+                                color = Color.Black
                             )
                             //find unique user
                             val uniqueUsers = otherStatuses.map { st ->

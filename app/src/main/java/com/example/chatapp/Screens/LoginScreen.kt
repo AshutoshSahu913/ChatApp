@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -84,7 +85,6 @@ fun LoginScreen(navController: NavController, vm: LiveChatViewModel) {
                 .fillMaxWidth()
                 .padding(40.dp)
         )
-        val maxChar = 10
 
         ElevatedCard(
             elevation = CardDefaults.cardElevation(4.dp),
@@ -124,7 +124,7 @@ fun LoginScreen(navController: NavController, vm: LiveChatViewModel) {
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Email,
-                        contentDescription = "call icon",
+                        contentDescription = "email icon",
                     )
                 },
                 modifier = Modifier
@@ -139,7 +139,9 @@ fun LoginScreen(navController: NavController, vm: LiveChatViewModel) {
             Spacer(modifier = Modifier.size(10.dp))
             OutlinedTextField(
                 value = password.value,
-                onValueChange = { password.value = it },
+                onValueChange = {
+                    password.value = it
+                },
                 label = { Text(text = "Password", fontSize = 14.sp, fontWeight = FontWeight.Bold) },
                 shape = RoundedCornerShape(10.dp),
                 colors = TextFieldDefaults.colors(
@@ -161,14 +163,10 @@ fun LoginScreen(navController: NavController, vm: LiveChatViewModel) {
                         contentDescription = "password icon"
                     )
                 },
-                trailingIcon = {
-                    Icon(imageVector = Icons.Default.Lock, contentDescription = "Eyes")
-
-                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 20.dp, top = 10.dp, end = 20.dp, bottom = 30.dp),
-//            visualTransformation = PasswordVisualTransformation(),
+                visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
                 textStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold),
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),

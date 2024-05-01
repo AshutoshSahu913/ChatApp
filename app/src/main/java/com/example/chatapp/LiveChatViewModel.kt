@@ -1,10 +1,13 @@
 package com.example.chatapp
 
+import android.app.Application
+import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.text.isDigitsOnly
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.chatapp.Data.CHATS
 import com.example.chatapp.Data.ChatData
@@ -31,20 +34,20 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LiveChatViewModel @Inject constructor(
-    val auth: FirebaseAuth,
-    val db: FirebaseFirestore,
-    val storage: FirebaseStorage
-) : ViewModel() {
+    private val auth: FirebaseAuth,
+    private val db: FirebaseFirestore,
+    private val storage: FirebaseStorage
+) : AndroidViewModel(application = Application()) {
 
     var inProgress = mutableStateOf(false)
     var inProgressChats = mutableStateOf(false)
-    var eventMutableState = mutableStateOf<Event<String>?>(null)
+    private var eventMutableState = mutableStateOf<Event<String>?>(null)
     var signIn = mutableStateOf(false)
     var userData = mutableStateOf<UserData?>(null)
     var chats = mutableStateOf<List<ChatData>>(listOf())
     val chatMessages = mutableStateOf<List<Message>>(listOf())
-    val inProgressChatMessage = mutableStateOf(false)
-    var currentChatMessageListener: ListenerRegistration? = null
+    private val inProgressChatMessage = mutableStateOf(false)
+    private var currentChatMessageListener: ListenerRegistration? = null
 
     var status = mutableStateOf<List<Status>>(listOf())
     val inProgressStatus = mutableStateOf(false)
@@ -60,18 +63,20 @@ class LiveChatViewModel @Inject constructor(
 
     fun populateMessages(chatId: String) {
         inProgressChatMessage.value = true
-        currentChatMessageListener = db.collection(CHATS).document(chatId).collection(MESSAGES)
-            .addSnapshotListener { value, error ->
-                if (error != null) {
-                    handleException(exception = error)
+        viewModelScope.launch {
+            currentChatMessageListener = db.collection(CHATS).document(chatId).collection(MESSAGES)
+                .addSnapshotListener { value, error ->
+                    if (error != null) {
+                        handleException(exception = error)
+                    }
+                    if (value != null) {
+                        chatMessages.value = value.documents.mapNotNull {
+                            it.toObject<Message>()
+                        }.sortedBy { it.timeStamp }
+                        inProgressChatMessage.value = false
+                    }
                 }
-                if (value != null) {
-                    chatMessages.value = value.documents.mapNotNull {
-                        it.toObject<Message>()
-                    }.sortedBy { it.timeStamp }
-                    inProgressChatMessage.value = false
-                }
-            }
+        }
     }
 
     fun depopulateMessages() {
@@ -82,6 +87,7 @@ class LiveChatViewModel @Inject constructor(
     //send message to firebase
     fun onSendReply(chatID: String, message: String) {
         val time = Calendar.getInstance().time.toString()
+
         val msg = Message(sendBy = userData.value?.userId, message = message, timeStamp = time)
         db.collection(CHATS).document(chatID).collection(MESSAGES).document().set(msg)
             .addOnCompleteListener {
@@ -93,7 +99,13 @@ class LiveChatViewModel @Inject constructor(
             }
     }
 
-    fun signUp(name: String, email: String, phoneNumber: String, password: String) {
+    fun signUp(
+        name: String,
+        email: String,
+        phoneNumber: String,
+        password: String,
+        context: Context
+    ) {
         inProgress.value = true
 
         // Validate input fields
@@ -104,7 +116,6 @@ class LiveChatViewModel @Inject constructor(
 
         // Check if the phone number is already registered
         viewModelScope.launch {
-
             db.collection(USER_NODE)
                 .whereEqualTo("number", phoneNumber)
                 .get()
@@ -118,15 +129,33 @@ class LiveChatViewModel @Inject constructor(
                                     signIn.value = true
                                     Log.d("SignUp", "Sign-up successful: $email")
                                     createAndUpdateProfile(name, phoneNumber)
+
+                                    Toast.makeText(
+                                        context,
+                                        "Sign up Successfully",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 } else {
                                     // Sign-up failed
                                     Log.e("SignUp", "Sign-up failed: $email", signUpTask.exception)
                                     handleException(signUpTask.exception, "Sign-up failed")
+                                    Toast.makeText(
+                                        context,
+                                        "Sign-up failed, ${signUpTask.exception?.localizedMessage}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
                                 }
                             }
                     } else {
                         // Phone number already exists
                         handleException(customMessage = "Phone number already exists")
+
+                        Toast.makeText(
+                            context,
+                            "Phone number already exists",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         inProgress.value = false
                     }
                 }
@@ -174,17 +203,19 @@ class LiveChatViewModel @Inject constructor(
 
     private fun getUserData(uid: String) {
         inProgress.value = true
-        db.collection(USER_NODE).document(uid).addSnapshotListener { value, error ->
-            if (error != null) {
-                handleException(error, "Cannot Retrieve User")
-            }
-            if (value != null) {
-                val user = value.toObject<UserData>()
-                userData.value = user
-                inProgress.value = false
-                populateChats()
-                populateStatuses()
-                Log.d("IMG", "ProfileContent: $user")
+        viewModelScope.launch {
+            db.collection(USER_NODE).document(uid).addSnapshotListener { value, error ->
+                if (error != null) {
+                    handleException(error, "Cannot Retrieve User")
+                }
+                if (value != null) {
+                    val user = value.toObject<UserData>()
+                    userData.value = user
+                    inProgress.value = false
+                    populateChats()
+                    populateStatuses()
+                    Log.d("IMG", "ProfileContent: $user")
+                }
             }
         }
     }
@@ -195,25 +226,27 @@ class LiveChatViewModel @Inject constructor(
             return
         } else {
             inProgress.value = true
-            auth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
-                if (it.isSuccessful) {
-                    signIn.value = true
-                    inProgress.value = false
-                    auth.currentUser?.uid?.let {
-                        getUserData(it)
+            viewModelScope.launch {
+                auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { it ->
+                    if (it.isSuccessful) {
+                        signIn.value = true
+                        inProgress.value = false
+                        auth.currentUser?.uid?.let {
+                            getUserData(it)
+                        }
+                    } else {
+                        handleException(exception = it.exception, customMessage = "Login Failed")
                     }
-                } else {
-                    handleException(exception = it.exception, customMessage = "Login Failed")
                 }
             }
         }
     }
 
-    fun handleException(exception: Exception? = null, customMessage: String = "") {
+    private fun handleException(exception: Exception? = null, customMessage: String = "") {
         Log.d("LiveChatApp", "Live chat exception : $exception")
         exception?.printStackTrace()
         val errorMsg = exception?.localizedMessage ?: ""
-        val message = if (customMessage.isNullOrEmpty()) errorMsg else customMessage
+        val message = if (customMessage.isEmpty()) errorMsg else customMessage
 
         eventMutableState.value = Event(message)
         inProgress.value = false
@@ -234,31 +267,43 @@ class LiveChatViewModel @Inject constructor(
         val uuid = UUID.randomUUID()
         val imageRef = storageRef.child("images/$uuid")
         val uploadTask = imageRef.putFile(uri)
-        uploadTask.addOnSuccessListener {
-            val result = it.metadata?.reference?.downloadUrl
-            inProgress.value = false
-            Log.d("RESULT", "uploadImg: $result")
-            Log.d("STATUS", "upload Img server-------------------------------------------------------------------------------- ")
-            result?.addOnSuccessListener(onSuccess)
-        }
-            .addOnFailureListener {
-                handleException(exception = it)
+        viewModelScope.launch {
+            uploadTask.addOnSuccessListener {
+                val result = it.metadata?.reference?.downloadUrl
                 inProgress.value = false
+                Log.d("RESULT", "uploadImg: $result")
+                Log.d(
+                    "STATUS",
+                    "upload Img server-------------------------------------------------------------------------------- "
+                )
+                result?.addOnSuccessListener(onSuccess)
             }
+                .addOnFailureListener {
+                    handleException(exception = it)
+                    inProgress.value = false
+                }
+        }
     }
 
-    fun logout() {
+    fun logout(context: Context) {
         auth.signOut()
         signIn.value=false
         userData.value=null
         eventMutableState.value = Event("Logout")
         depopulateMessages()
         currentChatMessageListener = null
+
+        Toast.makeText(
+            context,
+            "Logout Successfully",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
-    fun onAddChat(number: String) {
+    fun onAddChat(number: String, context: Context) {
         if (number.isEmpty() or !number.isDigitsOnly()) {
             handleException(customMessage = "Number must be contain digit only")
+
         } else {
             //here check the number is already available
             db.collection(CHATS).where(
@@ -272,7 +317,7 @@ class LiveChatViewModel @Inject constructor(
                         Filter.equalTo("user2.number", userData.value?.userNumber)
                     )
                 )
-            ).get().addOnSuccessListener {
+            ).get().addOnSuccessListener { it ->
                 //agar empty h toh user available nai h
                 if (it.isEmpty) {
                     db.collection(USER_NODE).whereEqualTo("userNumber", number).get()
@@ -280,6 +325,12 @@ class LiveChatViewModel @Inject constructor(
                             if (it.isEmpty) {
                                 //ye bala number humare app ke database m available ni h
                                 handleException(customMessage = "Number is Not Found from database")
+
+                                Toast.makeText(
+                                    context,
+                                    "User is not register in this app!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             } else {
                                 val chatPartner = it.toObjects<UserData>()[0]
                                 val id = db.collection(CHATS).document().id
@@ -335,14 +386,22 @@ class LiveChatViewModel @Inject constructor(
     }
 
     fun uploadStatus(uri: Uri) {
+        inProgressStatus.value = true
         uploadImg(uri = uri) {
             createStatus(it.toString())
-            Log.d("STATUS", "uploadStatus-------------------------------------------------------------------------------- ")
+            Log.d(
+                "STATUS",
+                "uploadStatus-------------------------------------------------------------------------------- "
+            )
         }
     }
 
-    fun createStatus(imageUrl: String) {
-        Log.d("STATUS", "creating -------------------------------------------------------------------------------- ")
+    private fun createStatus(imageUrl: String) {
+        Log.d(
+            "STATUS",
+            "creating -------------------------------------------------------------------------------- "
+
+        )
         val newStatus = Status(
             ChatUser(
                 userId = userData.value?.userId,
@@ -353,14 +412,16 @@ class LiveChatViewModel @Inject constructor(
             imageUrl = imageUrl,
             timeStamp = System.currentTimeMillis()
         )
-        db.collection(STATUS).document().set(newStatus)
+        viewModelScope.launch {
+            db.collection(STATUS).document().set(newStatus)
+        }
         Log.d(
             "STATUS",
             "create Node-------------------------------------------------------------------------------- "
         )
     }
 
-    fun populateStatuses() {
+    private fun populateStatuses() {
         Log.d("STATUS", "get Status-------------------------------------------------------------------------------- ")
         val timeDelta = 24L * 60 * 60 * 1000
         val currentTime = System.currentTimeMillis()
@@ -389,21 +450,25 @@ class LiveChatViewModel @Inject constructor(
 //                        inProgressStatus.value = false
                     }
                 }
-
+                viewModelScope.launch {
+                    db.collection(STATUS).whereGreaterThan("timeStamp", cutOff)
+                        .whereIn("user.userId", currentConnections)
+                        .addSnapshotListener { value1, error1 ->
+                            if (error1 != null) {
+                                handleException(exception = error1)
+                                inProgressStatus.value = false
+                            }
+                            if (value1 != null) {
+                                status.value = value1.toObjects()
+                                Log.d(
+                                    "STATUS",
+                                    "set Status in value-------------------------------------------------------------------------------- "
+                                )
+                                inProgressStatus.value = false
+                            }
+                        }
+                }
                 //jinke sath baatcheet karta hoon unke status lana h
-                db.collection(STATUS).whereGreaterThan("timeStamp", cutOff)
-                    .whereIn("user.userId", currentConnections)
-                    .addSnapshotListener { value1, error1 ->
-                        if (error1 != null) {
-                            handleException(exception = error1)
-                            inProgressStatus.value = false
-                        }
-                        if (value1 != null) {
-                            status.value= value1.toObjects()
-                            Log.d("STATUS", "set Status in value-------------------------------------------------------------------------------- ")
-                            inProgressStatus.value = false
-                        }
-                    }
             }
         }
     }

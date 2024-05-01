@@ -279,15 +279,14 @@ fun SignUpScreen(navController: NavController, vm: LiveChatViewModel) {
             Button(
                 onClick = {
                     if (userName.value.isNotEmpty() && password.value.isNotEmpty() && email.value.isNotEmpty() && phoneNumber.value.isNotEmpty()) {
-//                        buttonText.value = ""
                         vm.signUp(
                             name = userName.value,
                             email = email.value,
                             phoneNumber = phoneNumber.value,
-                            password = password.value
+                            password = password.value, context = context
                         )
+
                     } else {
-//                        buttonText.value = "Register"
                         Toast.makeText(context, "Fill all fields", Toast.LENGTH_SHORT).show()
 
                     }

@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -66,6 +67,7 @@ import com.example.chatapp.ui.theme.Color1
 @Composable
 fun ProfileScreen(navController: NavHostController, vm: LiveChatViewModel) {
 
+    val context= LocalContext.current.applicationContext
     val userData = vm.userData.value
 
     var name by rememberSaveable {
@@ -101,7 +103,8 @@ fun ProfileScreen(navController: NavHostController, vm: LiveChatViewModel) {
             )
         },
         logout = {
-            vm.logout()
+            vm.logout(context=context)
+            navController.popBackStack()
             navigateTo(navController = navController, route = DestinationScreen.Login.route)
         }
     )
@@ -328,12 +331,12 @@ fun ProfileImage(imageUrl: String?, vm: LiveChatViewModel) {
                 data = imageUrl,
                 modifier = Modifier
                     .size(100.dp)
+                    .clip(shape= CircleShape)
                     .padding(5.dp)
                     .fillMaxWidth(),
-
+                contentScale = ContentScale.Crop
             )
         }
-
     } else {
         // Handle case when imageUrl is null or empty
         Image(
@@ -341,7 +344,7 @@ fun ProfileImage(imageUrl: String?, vm: LiveChatViewModel) {
             contentDescription = "",
             modifier = Modifier
                 .size(100.dp)
-                .padding(8.dp)
+                .padding(5.dp)
                 .clickable {
                     launcher.launch("image/*")
                 })
