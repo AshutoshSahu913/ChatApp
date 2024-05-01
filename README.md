@@ -8,6 +8,7 @@
 
 ## Chat Screen
 
+<img src="https://github.com/AshutoshSahu913/ChatApp/assets/99418524/e075ace9-5dab-402f-b7d1-d699e52af82b" alt="Screenshot_20240501-125909_Chat App" width="200" height="400">
 <img src="https://github.com/AshutoshSahu913/ChatApp/assets/99418524/92631309-9cf9-4213-8b0e-6b6ba7586aa4" alt="Screenshot_20240501-121444_Chat App" width="200" height="400">
 <img src="https://github.com/AshutoshSahu913/ChatApp/assets/99418524/9e804ce8-26e1-45d9-b4b2-3109b9d8f96f" alt="Screenshot_20240501-121335_Chat App" width="200" height="400">
 <img src="https://github.com/AshutoshSahu913/ChatApp/assets/99418524/5499eb6e-652b-4538-866b-6381bb8f746b" alt="Screenshot_20240501-121423_Chat App" width="200" height="400">
@@ -15,6 +16,7 @@
 
 ## Status
 
+<img src="https://github.com/AshutoshSahu913/ChatApp/assets/99418524/8df34360-513e-49a7-9a3a-93123fd27c0b" alt="Screenshot_20240501-125914_Chat App" width="200" height="400">
 <img src="https://github.com/AshutoshSahu913/ChatApp/assets/99418524/0dc87388-57b1-4b58-8bff-82b31c9e84b4" alt="Screenshot_20240501-121342_Chat App" width="200" height="400">
 <img src="https://github.com/AshutoshSahu913/ChatApp/assets/99418524/2445f62d-b0ef-46d2-91a0-7dcd66e2ddcd" alt="Screenshot_20240501-121355_Chat App" width="200" height="400">
 <img src="https://github.com/AshutoshSahu913/ChatApp/assets/99418524/37c356d4-c7bb-4f1d-bd24-ba30ce268b63" alt="Screenshot_20240501-121403_Chat App" width="200" height="400">
